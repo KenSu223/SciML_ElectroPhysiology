@@ -1,6 +1,6 @@
 import scipy.io
 import deepxde as dde
-from deepxde.backend import tf
+import tensorflow as tf
 import numpy as np
 
 class system_dynamics():
