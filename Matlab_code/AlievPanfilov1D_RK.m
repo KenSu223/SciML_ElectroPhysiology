@@ -1,4 +1,4 @@
-function [Vsav,Wsav]=AlievPanfilov1D_RK(BCL,ncyc,extra,ncells,iscyclic,flagmovie)
+% function [Vsav,Wsav]=AlievPanfilov1D_RK(BCL,ncyc,extra,ncells,iscyclic,flagmovie)
 % (Ventricular) Aliev-Panfilov model in single-cell with the parameters
 % from Goektepe et al, 2010
 % Marta, 18/03/2021
@@ -20,12 +20,12 @@ function [Vsav,Wsav]=AlievPanfilov1D_RK(BCL,ncyc,extra,ncells,iscyclic,flagmovie
 
 % close all
 % clear all
-% BCL=100;
-% ncyc=2;
-% extra=0;
-% ncells=100;
-% iscyclic=0;
-% flagmovie=1;
+BCL=100;
+ncyc=2;
+extra=0;
+ncells=100;
+iscyclic=0;
+flagmovie=1;
 
 % one of the biggest determinants of the propagation speed
 % (D should lead to realistic conduction velocities, i.e.
@@ -56,64 +56,64 @@ y=[V;W]';
 % for loop for explicit RK4 finite differences simulation
 for t=dt:dt:tend % for every timestep
     ind=ind+1; % count interations
-        % stimulate at every BCL time interval for ncyc times
-        if t>=BCL*kk&&kk<ncyc
-            V(stimgeo)=Va;
+    % stimulate at every BCL time interval for ncyc times
+    if t>=BCL*kk&&kk<ncyc
+        V(stimgeo)=Va;
 
+    end
+    % stop stimulating after stimdur
+    if t>=BCL*kk+stimdur
+        kk=kk+1;
+    end
+    
+    y=[V;W]';
+    k1=AlPan(y);
+    k2=AlPan(y+dt/2.*k1);
+    k3=AlPan(y+dt/2.*k2);
+    k4=AlPan(y+dt.*k3);
+    y=y+dt/6.*(k1+2*k2+2*k3+k4);
+    V=y(:,1)';
+    W=y(:,2)';
+                  
+    % rectangular boundary conditions: no flux of V
+    if  ~iscyclic % 1D cable
+        V(1)=V(2);
+        V(end)=V(end-1);
+    else % ring
+        % set up later - need to amend derivatives calculation too
+    end
+    
+    % At every gathert iterations, save V value for plotting
+    if mod(ind,gathert)==0
+        % save values
+        Vsav(:,round(ind/gathert))=V(2:end-1)';
+        Wsav(:,round(ind/gathert))=W(2:end-1)';
+        % show (thicker) cable
+        if flagmovie
+            subplot(2,1,1)
+            imagesc(repmat(V(2:end-1),[round(ncells/20) 1]),[0 1])
+            axis image
+            title([])
+            set(gca,'FontSize',14)
+            yticks(0)
+            xlabel('x (voxels)')
+            set(gca,'FontSize',14)
+            title(['V (AU) - Time: ' num2str(t,'%.0f') ' ms'])
+            colorbar
+            
+            subplot(2,1,2)
+            imagesc(repmat(W(2:end-1),[round(ncells/20) 1]),[0 1])
+            axis image
+            title(['Time: ' num2str(t,'%.0f') ' ms'])
+            set(gca,'FontSize',14)
+            yticks(0)
+            xlabel('x (voxels)')
+            set(gca,'FontSize',14)
+            title('W (AU)')
+            colorbar
+            pause(0.01)
         end
-        % stop stimulating after stimdur
-        if t>=BCL*kk+stimdur
-            kk=kk+1;
-        end
-        
-        y=[V;W]';
-        k1=AlPan(y);
-        k2=AlPan(y+dt/2.*k1);
-        k3=AlPan(y+dt/2.*k2);
-        k4=AlPan(y+dt.*k3);
-        y=y+dt/6.*(k1+2*k2+2*k3+k4);
-        V=y(:,1)';
-        W=y(:,2)';
-                      
-        % rectangular boundary conditions: no flux of V
-        if  ~iscyclic % 1D cable
-            V(1)=V(2);
-            V(end)=V(end-1);
-        else % ring
-            % set up later - need to amend derivatives calculation too
-        end
-        
-        % At every gathert iterations, save V value for plotting
-        if mod(ind,gathert)==0
-            % save values
-            Vsav(:,round(ind/gathert))=V(2:end-1)';
-            Wsav(:,round(ind/gathert))=W(2:end-1)';
-            % show (thicker) cable
-            if flagmovie
-                subplot(2,1,1)
-                imagesc(repmat(V(2:end-1),[round(ncells/20) 1]),[0 1])
-                axis image
-                title([])
-                set(gca,'FontSize',14)
-                yticks(0)
-                xlabel('x (voxels)')
-                set(gca,'FontSize',14)
-                title(['V (AU) - Time: ' num2str(t,'%.0f') ' ms'])
-                colorbar
-                
-                subplot(2,1,2)
-                imagesc(repmat(W(2:end-1),[round(ncells/20) 1]),[0 1])
-                axis image
-                title(['Time: ' num2str(t,'%.0f') ' ms'])
-                set(gca,'FontSize',14)
-                yticks(0)
-                xlabel('x (voxels)')
-                set(gca,'FontSize',14)
-                title('W (AU)')
-                colorbar
-                pause(0.01)
-            end
-        end
+    end
 end
 close all
 
@@ -151,4 +151,4 @@ function dydt = AlPan(y)
     dVdt=(-k.*V.*(V-a).*(V-1)-W.*V)+dV;
     dydt=[dVdt; dWdt]';
 end
-end
+% end

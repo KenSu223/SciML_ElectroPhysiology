@@ -158,4 +158,4 @@ end
 % saveas(gcf,[matname '_EGM.fig']);
 save([matname(1:end-4) '_EGM.mat'])
 
-% end
+end
