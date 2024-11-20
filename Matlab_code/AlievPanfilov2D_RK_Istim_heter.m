@@ -19,14 +19,14 @@
 % arbitrary units (AU)
 % t is the time in AU - to scale do tms = t *12.9
 
-% close all
-% clear all
-% BCL=100;
-% ncyc=2;
-% extra=0;
-% ncells=100;
-% iscyclic=0;
-% flagmovie=1;
+close all
+clear all
+BCL=100;
+ncyc=2;
+extra=0;
+ncells=32;
+iscyclic=0;
+flagmovie=1;
 
 setglobs(ncells);
 global fibloc

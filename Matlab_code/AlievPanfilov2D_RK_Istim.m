@@ -23,7 +23,7 @@ clear all
 BCL=100;
 ncyc=2;
 extra=0;
-ncells=100;
+ncells=32;
 iscyclic=0;
 flagmovie=1;
 
@@ -39,10 +39,8 @@ stimgeo(1:5,1:5)=true; % indices of cells where external stimulus is felt
 % time step below 10x larger than for forward Euler
 dt=0.001; % 10^(-3) ~ 10^(-5) AU, time step for finite differences solver
 gathert=round(1/dt); % number of iterations at which V is outputted
-fprintf("gathert = %d\n", gathert);
 % for plotting, set to correspond to 1 ms, regardless of dt
 tend=BCL*ncyc+extra; % ms, duration of simulation
-fprintf("tend = %d\n", tend);
 stimdur=1; % UA, duration of stimulus
 Ia=0.1*stimgeo; % AU, value for Istim when cell is stimulated
 
@@ -51,7 +49,8 @@ W(1:X,1:Y)=0.01; % initial W
 
 Vsav=zeros(ncells,ncells,ceil(tend)); % array where V will be saved during simulation
 Wsav=zeros(ncells,ncells,ceil(tend)); % array where W will be saved during simulation
-out=zeros(1000,5);
+data = zeros(1000, 2, 32, 32, 2);
+
 ind=0; %iterations counter
 kk=0; %counter for number of stimuli applied
 
@@ -123,21 +122,13 @@ for t=dt:dt:tend % for every timestep
         end
     end
 
-    if mod(ind,20*gathert)==0
-        currentT=100*(round(ind/(20*gathert))-1);
-        for i=1:10
-            for j=1:10
-                idx=currentT+10*(i-1)+j;
-                out(idx,1)=i*10;
-                out(idx,2)=j*10;
-                out(idx,3)=t;
-                out(idx,4)=V(i*10,j*10);
-                out(idx,5)=W(i*10,j*10);
-            end
-        end
+    if mod(ind,200)==1
+        idx = ind / 200 + 1;
+        tms = t * 12.9;
+        data(idx, 1, )
     end
 end
-save("2D_Istim.mat","out");
+save("2D_data.mat","data");
 close all
 
 function dydt = AlPan(y,Istim)
