@@ -29,35 +29,54 @@ Y = ncells + 2;
 
 % Model parameters
 % time step below 10x larger than for forward Euler
-dt=0.001; % 10^(-3) ~ 10^(-5) AU, time step for finite differences solver
-
+dt=0.005; % 10^(-3) ~ 10^(-5) AU, time step for finite differences solver
+gathert = round(1/dt);
 data = zeros(1000, 2, 32, 32, 2);
-
-
+space = 4;
+k = space * 9;
 
 % for loop for explicit RK4 finite differences simulation
-for i = 1:1000 % for 1000 data points
+for i = 1:125 % for 1000 data points
     V(1:X,1:Y) = 0; % initial V
     W(1:X,1:Y) = 0.01; % initial W
-    V(2: X - 1, 2: X - 1) = rand(32, 32);
-    data(i, 1, :, :, 1) = V(2: end - 1, 2: end - 1);
-    data(i, 1, :, :, 2) = W(2: end - 1, 2: end - 1);
+    iniPos = randi(20, 1, 2);
+    iniSize = randi([5, 10], 1);
+    V(iniPos(1,1): iniPos(1,1) + iniSize(1,1), iniPos(1,2): iniPos(1,2) + iniSize(1,1)) = 1;
+    
+    ind = 0;
+    for t = dt: dt: k
+        y=zeros(2,size(V,1),size(V,2));
+        y(1,:,:)=V;
+        y(2,:,:)=W;
+        k1=AlPan(y);
+        k2=AlPan(y+dt/2.*k1);
+        k3=AlPan(y+dt/2.*k2);
+        k4=AlPan(y+dt.*k3);
+        y=y+dt/6.*(k1+2*k2+2*k3+k4);
+        V=squeeze(y(1,:,:));
+        W=squeeze(y(2,:,:));
+        
+        % rectangular boundary conditions: no flux of V
+        V(1,:)=V(2,:);
+        V(end,:)=V(end-1,:);
+        V(:,1)=V(:,2);
+        V(:,end)=V(:,end-1);
+        
+        ind = ind + 1;
+        if mod(ind, (space * gathert)) == 0 
+            if ind/(space * gathert)< 9
+                data((i-1) * 8 + ind/(space * gathert), 1, :, :, 1) = V(2: end - 1, 2: end - 1);
+                data((i-1) * 8 + ind/(space * gathert), 1, :, :, 2) = W(2: end - 1, 2: end - 1);
+            end
 
-    y=zeros(2,size(V,1),size(V,2));
-    y(1,:,:)=V;
-    y(2,:,:)=W;
-    k1=AlPan(y);
-    k2=AlPan(y+dt/2.*k1);
-    k3=AlPan(y+dt/2.*k2);
-    k4=AlPan(y+dt.*k3);
-    y=y+dt/6.*(k1+2*k2+2*k3+k4);
-    V=squeeze(y(1,:,:));
-    W=squeeze(y(2,:,:));
-                  
-    data(i, 2, :, :, 1) = V(2: end - 1, 2: end - 1);
-    data(i, 2, :, :, 2) = W(2: end - 1, 2: end - 1);
+            if ind/(space * gathert) > 1 && ind/(space * gathert) < 10
+                data((i-1) * 8 + ind/(space * gathert) - 1, 2, :, :, 1) = V(2: end - 1, 2: end - 1);
+                data((i-1) * 8 + ind/(space * gathert) - 1, 2, :, :, 2) = W(2: end - 1, 2: end - 1);
+            end
+        end
+    end
 end
-save("2D_data_3.mat","data");
+save("2D_data.mat","data");
 
 function dydt = AlPan(y)
     a = 0.01;

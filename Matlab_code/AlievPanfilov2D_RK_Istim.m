@@ -37,7 +37,7 @@ stimgeo(1:5,1:5)=true; % indices of cells where external stimulus is felt
 
 % Model parameters
 % time step below 10x larger than for forward Euler
-dt=0.001; % 10^(-3) ~ 10^(-5) AU, time step for finite differences solver
+dt=0.005; % 10^(-3) ~ 10^(-5) AU, time step for finite differences solver
 gathert=round(1/dt); % number of iterations at which V is outputted
 % for plotting, set to correspond to 1 ms, regardless of dt
 tend=BCL*ncyc+extra; % ms, duration of simulation
@@ -49,7 +49,6 @@ W(1:X,1:Y)=0.01; % initial W
 
 Vsav=zeros(ncells,ncells,ceil(tend)); % array where V will be saved during simulation
 Wsav=zeros(ncells,ncells,ceil(tend)); % array where W will be saved during simulation
-data = zeros(1000, 2, 32, 32, 2);
 
 ind=0; %iterations counter
 kk=0; %counter for number of stimuli applied
@@ -121,14 +120,7 @@ for t=dt:dt:tend % for every timestep
             pause(0.01)
         end
     end
-
-    if mod(ind,200)==1
-        idx = ind / 200 + 1;
-        tms = t * 12.9;
-        data(idx, 1, )
-    end
 end
-save("2D_data.mat","data");
 close all
 
 function dydt = AlPan(y,Istim)
