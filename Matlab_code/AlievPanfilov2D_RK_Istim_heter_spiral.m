@@ -24,7 +24,7 @@ clear all
 tend = 300;
 Dfac = 1; % factor by which D0 is reduced in fibrotic area
 % extra=0;
-ncells=100;
+ncells=32;
 iscyclic=0;
 flagmovie=1;
 
@@ -37,10 +37,12 @@ global fibloc
 X = ncells + 2; % to allow boundary conditions implementation
 Y = ncells + 2;
 stimgeo=false(X,Y);
-stimgeo(1:5,:)=true; % indices of cells where external stimulus is felt
+i = 0;
+stimgeo(i+1:i+5,:)=true; % indices of cells where external stimulus is felt
 
+j = 0;
 crossfgeo=false(X,Y); % extra stimulus to generate spiral wave
-crossfgeo(:,1:floor(X/3))=true;
+crossfgeo(:,j+1:j+floor(X/3))=true;
 tCF=42; % time (AU) at which the extra stimulus is applied
 
 % Model parameters
@@ -58,8 +60,8 @@ Ia=0.12; % AU, value for Istim when cell is stimulated
 V(1:X,1:Y)=0; % initial V
 W(1:X,1:Y)=0.01; % initial W
 
-Vsav=zeros(ncells,ncells,ceil((tend-tstar)/gathert)); % array where V will be saved during simulation
-Wsav=zeros(ncells,ncells,ceil((tend-tstar)/gathert)); % array where W will be saved during simulation
+%Vsav=zeros(ncells,ncells,ceil((tend-tstar)/gathert)); % array where V will be saved during simulation
+%Wsav=zeros(ncells,ncells,ceil((tend-tstar)/gathert)); % array where W will be saved during simulation
 
 ind=0; %iterations counter
 
@@ -68,80 +70,80 @@ y=zeros(2,size(V,1),size(V,2));
 % for loop for explicit RK4 finite differences simulation
 for t=dt:dt:tend % for every timestep
     ind=ind+1; % count interations
-        % stimulate at every BCL time interval for ncyc times
-        if t<=stimdur
-            Istim=Ia*stimgeo; % stimulating current
-        elseif t>=tCF&&t<=tCF+stimdur
-            Istim=Ia*crossfgeo;
-        else
-            Istim=zeros(X,Y); % stimulating current
-        end
-        
-        % 4-step explicit Runga-Kutta implementation
-        y(1,:,:)=V;
-        y(2,:,:)=W;
-        k1=AlPan(y,Istim);
-        k2=AlPan(y+dt/2.*k1,Istim);
-        k3=AlPan(y+dt/2.*k2,Istim);
-        k4=AlPan(y+dt.*k3,Istim);
-        y=y+dt/6.*(k1+2*k2+2*k3+k4);
-        V=squeeze(y(1,:,:));
-        W=squeeze(y(2,:,:));
-                      
-        % rectangular boundary conditions: no flux of V
-        if  ~iscyclic % 1D cable
-            V(1,:)=V(2,:);
-            V(end,:)=V(end-1,:);
-            V(:,1)=V(:,2);
-            V(:,end)=V(:,end-1);
-        else % periodic boundary conditions in x, y or both
-            % set up later - need to amend derivatives calculation too
-        end
-        
-        % At every gathert iterations, save V value for plotting
-        if t>=tstar&&mod(ind,gathert)==0
-            % save values
-            Vsav(:,:,round(ind/gathert))=V(2:end-1,2:end-1)';
-            Wsav(:,:,round(ind/gathert))=W(2:end-1,2:end-1)';
-            % show (thicker) cable
-            if flagmovie
-                subplot(2,1,1)
-                imagesc(V(2:end-1,2:end-1)',[0 1])
-                hold all
-                if Dfac<1 % there is a heterogeneity
-                    rectangle('Position',[fibloc(1) fibloc(1) ...
-                        fibloc(2)-fibloc(1) fibloc(2)-fibloc(1)]);
-                end
-                axis image
-                set(gca,'FontSize',14)
-                xlabel('x (voxels)')
-                ylabel('y (voxels)')
-                set(gca,'FontSize',14)
-                title(['V (AU) - Time: ' num2str(t,'%.0f') ' ms'])
-                colorbar
-                hold off
-                
-                subplot(2,1,2)
-                imagesc(W(2:end-1,2:end-1)',[0 1])
-                hold all
-                if Dfac<1 % there is a heterogeneity
-                    rectangle('Position',[fibloc(1) fibloc(1) ...
-                        fibloc(2)-fibloc(1) fibloc(2)-fibloc(1)]);
-                end
-                axis image
-                set(gca,'FontSize',14)
-                xlabel('x (voxels)')
-                ylabel('y (voxels)')
-                set(gca,'FontSize',14)
-                title(['V (AU) - Time: ' num2str(t,'%.0f') ' ms'])
-                colorbar
-                set(gca,'FontSize',14)
-                title('W (AU)')
-                colorbar
-                pause(0.01)
-                hold off
+    % stimulate at every BCL time interval for ncyc times
+    if t<=stimdur
+        Istim=Ia*stimgeo; % stimulating current
+    elseif t>=tCF&&t<=tCF+stimdur
+        Istim=Ia*crossfgeo;
+    else
+        Istim=zeros(X,Y); % stimulating current
+    end
+    
+    % 4-step explicit Runga-Kutta implementation
+    y(1,:,:)=V;
+    y(2,:,:)=W;
+    k1=AlPan(y,Istim);
+    k2=AlPan(y+dt/2.*k1,Istim);
+    k3=AlPan(y+dt/2.*k2,Istim);
+    k4=AlPan(y+dt.*k3,Istim);
+    y=y+dt/6.*(k1+2*k2+2*k3+k4);
+    V=squeeze(y(1,:,:));
+    W=squeeze(y(2,:,:));
+                  
+    % rectangular boundary conditions: no flux of V
+    if  ~iscyclic % 1D cable
+        V(1,:)=V(2,:);
+        V(end,:)=V(end-1,:);
+        V(:,1)=V(:,2);
+        V(:,end)=V(:,end-1);
+    else % periodic boundary conditions in x, y or both
+        % set up later - need to amend derivatives calculation too
+    end
+    
+    % At every gathert iterations, save V value for plotting
+    if t>=tstar&&mod(ind,gathert)==0
+        % save values
+        %Vsav(:,:,round(ind/gathert))=V(2:end-1,2:end-1)';
+        %Wsav(:,:,round(ind/gathert))=W(2:end-1,2:end-1)';
+        % show (thicker) cable
+        if flagmovie
+            subplot(2,1,1)
+            imagesc(V(2:end-1,2:end-1)',[0 1])
+            hold all
+            if Dfac<1 % there is a heterogeneity
+                rectangle('Position',[fibloc(1) fibloc(1) ...
+                    fibloc(2)-fibloc(1) fibloc(2)-fibloc(1)]);
             end
+            axis image
+            set(gca,'FontSize',14)
+            xlabel('x (voxels)')
+            ylabel('y (voxels)')
+            set(gca,'FontSize',14)
+            title(['V (AU) - Time: ' num2str(t,'%.0f') ' ms'])
+            colorbar
+            hold off
+            
+            subplot(2,1,2)
+            imagesc(W(2:end-1,2:end-1)',[0 1])
+            hold all
+            if Dfac<1 % there is a heterogeneity
+                rectangle('Position',[fibloc(1) fibloc(1) ...
+                    fibloc(2)-fibloc(1) fibloc(2)-fibloc(1)]);
+            end
+            axis image
+            set(gca,'FontSize',14)
+            xlabel('x (voxels)')
+            ylabel('y (voxels)')
+            set(gca,'FontSize',14)
+            title(['V (AU) - Time: ' num2str(t,'%.0f') ' ms'])
+            colorbar
+            set(gca,'FontSize',14)
+            title('W (AU)')
+            colorbar
+            pause(0.01)
+            hold off
         end
+    end
 end
 close all
 

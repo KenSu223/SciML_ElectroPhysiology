@@ -18,7 +18,8 @@
 % arbitrary units (AU)
 % t is the time in AU - to scale do tms = t *12.9
 
-
+close all
+clear all
 ncells=32;
 
 % one of the biggest determinants of the propagation speed
@@ -32,16 +33,23 @@ Y = ncells + 2;
 dt=0.005; % 10^(-3) ~ 10^(-5) AU, time step for finite differences solver
 gathert = round(1/dt);
 data = zeros(1000, 2, 32, 32, 2);
-k = 2 * 9;
+space = 4;
+k = space * 9;
 
 % for loop for explicit RK4 finite differences simulation
-for i = 1:1%25 % for 1000 data points
+for i = 1:125 % for 1000 data points
     V(1:X,1:Y) = 0; % initial V
     W(1:X,1:Y) = 0.01; % initial W
-    iniPos = randi(20, 1, 2);
-    iniSize = randi([5, 10], 1);
-    V(iniPos(1,1): iniPos(1,1) + iniSize(1,1), iniPos(1,2): iniPos(1,2) + iniSize(1,1)) = 1;
-    
+
+    if i <= 65
+        numIni = randi(4, 1);
+        iniPos = randi(30, numIni(1,1), 2);
+        for j = 1:numIni(1,1)
+            V(iniPos(j,1): iniPos(j,1) + 4, iniPos(j,2): iniPos(j,2) + 4) = 1;
+        end
+    else if i <= 95
+        V()
+
     ind = 0;
     for t = dt: dt: k
         y=zeros(2,size(V,1),size(V,2));
@@ -62,45 +70,21 @@ for i = 1:1%25 % for 1000 data points
         V(:,end)=V(:,end-1);
         
         ind = ind + 1;
-        if mod(ind, gathert) == 0 
 
-            subplot(2,1,1)
-            imagesc(V(2:end-1,2:end-1)',[0 1])
-            axis image
-            set(gca,'FontSize',14)
-            xlabel('x (voxels)')
-            ylabel('y (voxels)')
-            set(gca,'FontSize',14)
-            title(['V (AU) - Time: ' num2str(t,'%.0f') ' ms'])
-            colorbar
-            
-            subplot(2,1,2)
-            imagesc(W(2:end-1,2:end-1)',[0 1])
-            axis image
-            set(gca,'FontSize',14)
-            xlabel('x (voxels)')
-            ylabel('y (voxels)')
-            set(gca,'FontSize',14)
-            title(['V (AU) - Time: ' num2str(t,'%.0f') ' ms'])
-            colorbar
-            set(gca,'FontSize',14)
-            title('W (AU)')
-            colorbar
-            pause(0.01)
-
-            if ind/(2 * gathert)< 9
-                data((i-1) * 8 + ind/(2 * gathert), 1, :, :, 1) = V(2: end - 1, 2: end - 1);
-                data((i-1) * 8 + ind/(2 * gathert), 1, :, :, 2) = W(2: end - 1, 2: end - 1);
+        if mod(ind, (space * gathert)) == 0
+            if ind/(space * gathert)< 9
+                data((i-1) * 8 + ind/(space * gathert), 1, :, :, 1) = V(2: end - 1, 2: end - 1);
+                data((i-1) * 8 + ind/(space * gathert), 1, :, :, 2) = W(2: end - 1, 2: end - 1);
             end
 
-            if ind/(2 * gathert) > 1 && ind/gathert < 10
-                data((i-1) * 8 + ind/gathert - 1, 2, :, :, 1) = V(2: end - 1, 2: end - 1);
-                data((i-1) * 8 + ind/gathert - 1, 2, :, :, 2) = W(2: end - 1, 2: end - 1);
+            if ind/(space * gathert) > 1 && ind/(space * gathert) < 10
+                data((i-1) * 8 + ind/(space * gathert) - 1, 2, :, :, 1) = V(2: end - 1, 2: end - 1);
+                data((i-1) * 8 + ind/(space * gathert) - 1, 2, :, :, 2) = W(2: end - 1, 2: end - 1);
             end
         end
     end
 end
-%save("2D_data_3.mat","data");
+save("2D_data_1.mat","data");
 
 function dydt = AlPan(y)
     a = 0.01;

@@ -18,7 +18,8 @@
 % arbitrary units (AU)
 % t is the time in AU - to scale do tms = t *12.9
 
-
+close all
+clear all
 ncells=32;
 
 % one of the biggest determinants of the propagation speed
@@ -39,10 +40,19 @@ k = space * 9;
 for i = 1:125 % for 1000 data points
     V(1:X,1:Y) = 0; % initial V
     W(1:X,1:Y) = 0.01; % initial W
-    iniPos = randi(20, 1, 2);
-    iniSize = randi([5, 10], 1);
-    V(iniPos(1,1): iniPos(1,1) + iniSize(1,1), iniPos(1,2): iniPos(1,2) + iniSize(1,1)) = 1;
-    
+
+    if i <= 65
+        numIni = randi(4, 1);
+        iniPos = randi(30, numIni(1,1), 2);
+        for j = 1:numIni(1,1)
+            V(iniPos(j,1): iniPos(j,1) + 4, iniPos(j,2): iniPos(j,2) + 4) = 1;
+        end
+    elseif i <= 95
+        V(i-65: i-61, :) = 1;
+    else
+        V(:, i-95: i-91) = 1;
+    end
+
     ind = 0;
     for t = dt: dt: k
         y=zeros(2,size(V,1),size(V,2));
@@ -63,7 +73,8 @@ for i = 1:125 % for 1000 data points
         V(:,end)=V(:,end-1);
         
         ind = ind + 1;
-        if mod(ind, (space * gathert)) == 0 
+
+        if mod(ind, (space * gathert)) == 0
             if ind/(space * gathert)< 9
                 data((i-1) * 8 + ind/(space * gathert), 1, :, :, 1) = V(2: end - 1, 2: end - 1);
                 data((i-1) * 8 + ind/(space * gathert), 1, :, :, 2) = W(2: end - 1, 2: end - 1);
@@ -76,7 +87,7 @@ for i = 1:125 % for 1000 data points
         end
     end
 end
-save("2D_data.mat","data");
+save("2D_data_1.mat","data");
 
 function dydt = AlPan(y)
     a = 0.01;
