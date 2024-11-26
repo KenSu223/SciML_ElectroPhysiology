@@ -80,9 +80,9 @@ test_samples = test_loaders[32].dataset
 
 fig = plt.figure(figsize=(7, 7))
 
-for index in range(57, 60):
+for index in range(46, 49):
     data = test_samples[index]
-    index = index - 57
+    index = index - 46
     data = data_processor.preprocess(data, batched=False)
     # Input x
     x = data['x']
@@ -112,7 +112,7 @@ for index in range(57, 60):
     plt.xticks([], [])
     plt.yticks([], [])
 
-fig.suptitle('Inputs, ground-truth output and prediction.', y=0.98)
+fig.suptitle('Inputs, ground-truth output and prediction(32x32).', y=0.98)
 plt.tight_layout()
-fig.savefig("fig_uno_1.png")
+fig.savefig("fig_uno_data.png")
 fig.show()
