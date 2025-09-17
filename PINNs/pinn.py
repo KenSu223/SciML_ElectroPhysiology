@@ -135,3 +135,80 @@ class PINN():
             losshistory, train_state = self.model.train(model_save_path = out_path)
         return losshistory, train_state
         
+
+
+### Code Review for BMI 500 HW 3:
+"""
+The provided code defines a Physics-Informed Neural Network (PINN) class using the DeepXDE library. The class is designed to handle different dynamics, dimensions (1D and 2D), heterogeneity, and inverse problems. Below are some observations and suggestions for improvement:
+
+Prompt used: {I have a machine learning code script in Python here which defines the network architecture for a physics informed neural network, please conduct a detailed code review with the following objectives:
+
+Check for correctness and logic, like if the architecture is implemented correctly, or any logical mistakes
+Check for efficiency, like if there would be any operation that could be optimized, or any improvement that could lead to faster computation and better memory overhead.
+Check for coding best practices, like if the code is appropriately modularized, readable and maintainable, and if it follows expected coding conventions.
+Write a code review for this file based on these key objectives}
+
+AI Model used: GPT-4.1 embedded in VSCode Copilot
+
+Code Review: pinn.py
+1. Correctness and Logic
+
+- Initialization and Architecture:
+The class PINN is initialized with sensible defaults for 1D, and the modify_2d_const method updates parameters for 2D and heterogeneity/inverse problems. This is a good approach for flexibility.
+The network architecture is defined using DeepXDE's FNN with customizable input, hidden layers, and output sizes. The logic for selecting the PDE and output transforms based on dim, heter, and inverse is clear and appears correct.
+The define_pinn method correctly sets up the PDE, network, and DeepXDE model.
+The stable_init method attempts to ensure a good initialization by capping the loss, which is a practical approach for PINNs.
+
+- Potential Issues:
+In define_pinn, the output transform is applied via self.net.apply_output_transform(...). However, DeepXDE's apply_output_transform modifies the network in-place, and repeated calls may stack transforms if define_pinn is called multiple times. Consider resetting or guarding against this.
+In train_3_phase, the init_weights are hardcoded as [0,0,0,0,1]. If the number of outputs changes (e.g., due to heterogeneity), this could cause a mismatch. Consider dynamically setting this based on the output size.
+The train method always calls both train_1_phase and train_3_phase for 2D, but the distinction between 1D and 2D is only by dim. If a new dimension is added, this logic will need updating.
+The epochs_main is set to a very high value (150000) for 2D in modify_2d_const. This may be intentional, but could lead to unnecessarily long training times.
+
+2. Efficiency
+- Model Initialization:
+The stable_init method retrains the model from scratch if the initial loss is too high. This can be inefficient if the initialization repeatedly fails. Consider logging or providing feedback on why initialization fails, or using a more robust initialization strategy.
+- Training Loops:
+Each phase in train_3_phase recompiles the model, which is necessary for changing optimizers/loss weights, but recompiling can be expensive. This is standard in DeepXDE, but if possible, minimize recompilations.
+- Memory Usage:
+The number of domain and boundary points is high for 2D (40000 and 4000). This could lead to high memory usage. Consider batching or using generators if memory becomes an issue.
+- Callbacks:
+The use of dde.callbacks.VariableValue is good for tracking variables, but the period is hardcoded to 1000. Consider making this configurable.
+
+3. Coding Best Practices
+- Modularity and Readability:
+The code is well modularized, with clear separation between initialization, model definition, and training.
+Docstrings are missing for class and methods. Adding docstrings would improve maintainability and clarity.
+Variable names are generally clear, but some could be more descriptive (e.g., heter could be is_heterogeneous).
+Inline comments are helpful, but could be expanded for complex logic (e.g., why certain loss weights are chosen).
+- Error Handling:
+The stable_init method raises a ValueError if initialization fails too many times, which is good. Consider catching and logging exceptions during training as well.
+- Coding Conventions:
+The code follows PEP8 for the most part, but some minor improvements:
+Use self.output for output size, but the comment says "network input size" (should be "output size").
+Consider using snake_case for method names (e.g., modify_2d_const is fine, but PINN methods could be more consistent).
+Avoid using bare numbers for file names (e.g., "variables_" + self.inverse + ".dat"); use os.path.join for file paths.
+- Extensibility:
+The code is somewhat rigid for only 1D and 2D. If higher dimensions are needed, more generalization would be helpful.
+The logic for selecting PDEs and transforms is nested and could be refactored for clarity.
+
+Summary of Recommendations
+- Correctness
+Guard against repeated application of output transforms.
+Dynamically set init_weights based on output size.
+Add checks or warnings for very high epoch counts.
+
+- Efficiency
+Consider more robust model initialization strategies.
+Allow configuration of callback periods and training parameters.
+Monitor memory usage for large datasets.
+
+- Best Practices
+Add docstrings to all methods and the class.
+Use more descriptive variable names.
+Refactor nested logic for PDE selection.
+Use os.path.join for file paths.
+Ensure comments accurately describe the code.
+
+Overall, the code is well-structured and functional for its intended use, but could benefit from improved robustness, configurability, and documentation.
+"""
